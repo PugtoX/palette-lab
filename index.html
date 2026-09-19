@@ -1,0 +1,1082 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Palette Candidates</title>
+    <style>
+      /* The page shell stays neutral grey so it never biases the palette comparison. */
+      :root {
+        --shell: #eceef1;
+        --shell-panel: #ffffff;
+        --shell-fg: #17191f;
+        --shell-muted: #5f6673;
+        --shell-line: #d5d9e0;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--shell);
+        color: var(--shell-fg);
+        font-family: ui-sans-serif, system-ui, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        line-height: 1.6;
+      }
+
+      .wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+      }
+
+      h1 {
+        font-size: 26px;
+        letter-spacing: -0.01em;
+        margin: 0 0 8px;
+      }
+
+      .intro {
+        color: var(--shell-muted);
+        max-width: 62ch;
+        margin: 0 0 8px;
+      }
+
+      .toc {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 20px 0 40px;
+        padding: 0;
+        list-style: none;
+      }
+
+      .toc a {
+        display: inline-block;
+        padding: 6px 14px;
+        border: 1px solid var(--shell-line);
+        border-radius: 999px;
+        background: var(--shell-panel);
+        color: var(--shell-fg);
+        text-decoration: none;
+        font-size: 13px;
+      }
+
+      .toc a:hover {
+        border-color: #9aa2b1;
+      }
+
+      .case {
+        background: var(--shell-panel);
+        border: 1px solid var(--shell-line);
+        border-radius: 16px;
+        padding: 28px;
+        margin-bottom: 28px;
+      }
+
+      .case h2 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 19px;
+        margin: 0 0 4px;
+      }
+
+      .letter {
+        display: grid;
+        place-items: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        background: var(--shell-fg);
+        color: var(--shell-panel);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .case h2 small {
+        font-weight: 400;
+        color: var(--shell-muted);
+        font-size: 13px;
+      }
+
+      .note {
+        color: var(--shell-muted);
+        font-size: 14px;
+        margin: 0 0 20px;
+      }
+
+      .note b {
+        color: var(--shell-fg);
+      }
+
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+      }
+
+      figure {
+        margin: 0;
+      }
+
+      figcaption {
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--shell-muted);
+        font-family: ui-monospace, Consolas, monospace;
+      }
+
+      /* ---------- Phone preview: every colour comes from the candidate's own variables ---------- */
+      .phone {
+        width: 320px;
+        height: 470px;
+        overflow: hidden;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: var(--page);
+        color: var(--fg);
+        font-size: 12px;
+        line-height: 1.5;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .phone .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--line);
+        background: color-mix(in oklab, var(--page) 75%, transparent);
+      }
+
+      .phone .logo {
+        display: grid;
+        place-items: center;
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        border: 1px solid color-mix(in oklab, var(--accent) 40%, transparent);
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 9px;
+        font-weight: 700;
+      }
+
+      .phone nav {
+        display: flex;
+        gap: 2px;
+      }
+
+      .phone nav span {
+        padding: 3px 7px;
+        border-radius: 5px;
+        color: var(--muted);
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 10px;
+      }
+
+      .phone nav span.on {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      .phone .toggle {
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+      }
+
+      .phone .body {
+        flex: 1;
+        padding: 18px 16px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* Background grid plus a soft wash, echoing a real site's backdrop */
+      .phone .body::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(to right, var(--grid) 1px, transparent 1px),
+          linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+        background-size: 32px 32px;
+      }
+
+      .phone .body::after {
+        content: '';
+        position: absolute;
+        inset: -20%;
+        background: radial-gradient(
+          40% 40% at 20% 20%,
+          color-mix(in oklab, var(--accent) 26%, transparent),
+          transparent 70%
+        );
+        filter: blur(28px);
+      }
+
+      .phone .body > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--muted);
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 9px;
+      }
+
+      .badge i {
+        width: 5px;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--accent);
+      }
+
+      .phone h1 {
+        font-size: 26px;
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+        margin: 12px 0 0;
+      }
+
+      .role {
+        margin: 5px 0 0;
+        color: var(--accent);
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 11px;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .lead {
+        margin: 10px 0 0;
+        font-size: 11px;
+      }
+
+      .btns {
+        display: flex;
+        gap: 7px;
+        margin-top: 14px;
+      }
+
+      .btn {
+        padding: 7px 14px;
+        border-radius: 8px;
+        background: var(--accent);
+        color: var(--page);
+        font-weight: 600;
+        font-size: 11px;
+      }
+
+      .btn-ghost {
+        padding: 7px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        font-size: 11px;
+      }
+
+      .card {
+        margin-top: 16px;
+        padding: 13px;
+        border-radius: 11px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+      }
+
+      .card h3 {
+        margin: 0;
+        font-size: 13px;
+      }
+
+      .card p {
+        margin: 5px 0 0;
+        font-size: 10px;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 9px;
+      }
+
+      .chips span {
+        padding: 2px 7px;
+        border-radius: 5px;
+        border: 1px solid var(--line);
+        background: var(--panel-hover);
+        color: var(--muted);
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 9px;
+      }
+
+      /* ---------- Preview: label / value rows ---------- */
+      .data-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--line);
+        font-size: 11px;
+      }
+
+      .data-row:last-child {
+        border-bottom: 0;
+      }
+
+      .data-row .val {
+        font-family: ui-monospace, Consolas, monospace;
+        font-weight: 700;
+        color: var(--accent);
+        white-space: nowrap;
+      }
+
+      /* ---------- D/E/F: damp the decorative glow ----------
+         `.role` is coloured with --accent, and the `.body::after` glow is tinted with --accent too —
+         text and background share a hue, so the stronger the glow, the lower the contrast.
+         Modelled as "background = accent over page at effective alpha", D's .role falls below 4.5:1 past alpha 0.11.
+         Measured (sampled back out of the screenshots): local alpha at .role fell from 0.109 to 0.056,
+         contrast 4.50:1 -> 4.84:1. a/b/c left untouched.
+
+         Note: at the glow's PEAK, alpha = 0.26 x 0.45 = 0.117, where D is about 4.46:1 — still short.
+         So on a real site .role must not sit over the glow's peak — re-measure against the actual layout,
+         and never assume this damping rule is enough in every layout. */
+      [data-palette='d'] .body::after,
+      [data-palette='e'] .body::after,
+      [data-palette='f'] .body::after {
+        opacity: 0.45;
+      }
+
+      /* ---------- Type scale (a stage-2 deliverable) ---------- */
+      .scale-row {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--shell-line);
+      }
+
+      .scale-row:last-child {
+        border-bottom: 0;
+      }
+
+      .scale-row .px {
+        flex: 0 0 86px;
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 12px;
+        color: var(--shell-muted);
+      }
+
+      .scale-row .use {
+        font-size: 12px;
+        color: var(--shell-muted);
+      }
+
+      /* ---------- Candidates: variable definitions ---------- */
+      /* A — Technical Blue (low-risk refinement) */
+      [data-palette='a'][data-mode='light'] {
+        --accent: #0369a1;
+        --accent-soft: rgba(3, 105, 161, 0.12);
+        --page: #f8fafc;
+        --panel: #ffffff;
+        --panel-hover: #f1f5f9;
+        --line: #e2e8f0;
+        --line-strong: #cbd5e1;
+        --fg: #0b0d12;
+        --muted: #556070;
+        --grid: rgba(15, 23, 42, 0.06);
+      }
+      [data-palette='a'][data-mode='dark'] {
+        --accent: #38bdf8;
+        --accent-soft: rgba(56, 189, 248, 0.14);
+        --page: #08090b;
+        --panel: #0f1115;
+        --panel-hover: #14171d;
+        --line: #22262e;
+        --line-strong: #333944;
+        --fg: #e7eaf0;
+        --muted: #8b95a5;
+        --grid: rgba(255, 255, 255, 0.035);
+      }
+
+      /* B — Editorial Mono (black-and-white editorial) */
+      [data-palette='b'][data-mode='light'] {
+        --accent: #111827;
+        --accent-soft: rgba(17, 24, 39, 0.07);
+        --page: #fbfbfa;
+        --panel: #ffffff;
+        --panel-hover: #f4f4f2;
+        --line: #e7e5e4;
+        --line-strong: #d6d3d1;
+        --fg: #0a0a0a;
+        --muted: #57534e;
+        --grid: rgba(10, 10, 10, 0.05);
+      }
+      [data-palette='b'][data-mode='dark'] {
+        --accent: #fafaf9;
+        --accent-soft: rgba(250, 250, 249, 0.1);
+        --page: #0a0a0a;
+        --panel: #141414;
+        --panel-hover: #1c1c1c;
+        --line: #262626;
+        --line-strong: #404040;
+        --fg: #fafaf9;
+        --muted: #a3a3a3;
+        --grid: rgba(255, 255, 255, 0.04);
+      }
+
+      /* C — Warm Professional (warm and neutral) */
+      [data-palette='c'][data-mode='light'] {
+        --accent: #b45309;
+        --accent-soft: rgba(180, 83, 9, 0.11);
+        --page: #faf9f7;
+        --panel: #ffffff;
+        --panel-hover: #f5f2ee;
+        --line: #e8e4de;
+        --line-strong: #d5cfc6;
+        --fg: #1c1917;
+        --muted: #6b6259;
+        --grid: rgba(28, 25, 23, 0.05);
+      }
+      [data-palette='c'][data-mode='dark'] {
+        --accent: #fbbf24;
+        --accent-soft: rgba(251, 191, 36, 0.13);
+        --page: #0c0a09;
+        --panel: #17140f;
+        --panel-hover: #1f1b15;
+        --line: #2a2622;
+        --line-strong: #3d3730;
+        --fg: #f5f2ee;
+        --muted: #a8a096;
+        --grid: rgba(255, 255, 255, 0.035);
+      }
+
+      /* ---------- D/E/F: single-mode candidates ----------
+         Each defines only one mode (light or dark), never both.
+         The contrast script already handles single-mode candidates; both shapes can coexist. */
+      /* D — Studio White (clean clinical: light base, deep teal accent) */
+      [data-palette='d'][data-mode='light'] {
+        --accent: #0f766e;
+        --accent-soft: rgba(15, 118, 110, 0.1);
+        --page: #f7faf9;
+        --panel: #ffffff;
+        --panel-hover: #f0f5f4;
+        --line: #e0e8e6;
+        --line-strong: #c8d5d2;
+        --fg: #0c1311;
+        --muted: #4f5f5c;
+        --grid: rgba(12, 19, 17, 0.05);
+      }
+
+      /* E — Ember (after-hours: near-black base, warm amber accent) */
+      [data-palette='e'][data-mode='dark'] {
+        --accent: #fbbf24;
+        --accent-soft: rgba(251, 191, 36, 0.13);
+        --page: #0a0908;
+        --panel: #14110e;
+        --panel-hover: #1c1814;
+        --line: #272219;
+        --line-strong: #3a3327;
+        --fg: #f5f1ea;
+        --muted: #a89f92;
+        --grid: rgba(255, 255, 255, 0.035);
+      }
+
+      /* F — Concrete (local editorial: warm grey base, brick red accent) */
+      [data-palette='f'][data-mode='light'] {
+        --accent: #9a3412;
+        --accent-soft: rgba(154, 52, 18, 0.1);
+        --page: #f4f3f1;
+        --panel: #ffffff;
+        --panel-hover: #eeede9;
+        --line: #e2e0db;
+        --line-strong: #cdcac3;
+        --fg: #1a1917;
+        --muted: #5c5850;
+        --grid: rgba(26, 25, 23, 0.05);
+      }
+
+      /* ---------- Measured contrast (stage-2 acceptance evidence) ----------
+         WCAG 2.1 relative-luminance formula, computed by contrast-check.mjs. Reproduce with:
+             node contrast-check.mjs
+         Threshold: body text and secondary text must both be >= 4.5:1.
+         a/b/c measured 2026-09-18; d/e/f measured 2026-09-19.
+
+         A Technical Blue   light  fg/panel 19.43  muted/panel  6.38  fg/page 18.58  muted/page  6.09
+         A Technical Blue   dark   fg/panel 15.68  muted/panel  6.24  fg/page 16.53  muted/page  6.58
+         B Editorial Mono   light  fg/panel 19.80  muted/panel  7.63  fg/page 19.12  muted/page  7.37
+         B Editorial Mono   dark   fg/panel 17.64  muted/panel  7.30  fg/page 18.96  muted/page  7.85
+         C Warm Professional light fg/panel 17.49  muted/panel  5.97  fg/page 16.62  muted/page  5.68
+         C Warm Professional dark  fg/panel 16.46  muted/panel  7.11  fg/page 17.70  muted/page  7.65
+
+         D Studio White     light  fg/panel 18.80  muted/panel  6.72  fg/page 17.90  muted/page  6.40
+         E Ember            dark   fg/panel 16.71  muted/panel  7.20  fg/page 17.67  muted/page  7.62
+         F Concrete         light  fg/panel 17.57  muted/panel  7.08  fg/page 15.84  muted/page  6.38
+
+         All 36 pass >= 4.5:1 (global minimum 5.68:1, C/light muted/page;
+         D/E/F minima are 6.40 / 7.20 / 6.38).
+         D/E/F define one mode each, so 4 checks apiece (a/b/c give 8 each; 36 total).
+         Note: this tests the combinations in the variable tables. Change any palette and you must re-run the script —
+         the numbers above go stale. Never treat them as a permanent conclusion. */
+
+      /* ---------- Token tables ---------- */
+      .tokens {
+        margin: 22px 0 0;
+        padding: 14px 16px;
+        background: #f6f7f9;
+        border: 1px solid var(--shell-line);
+        border-radius: 10px;
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.75;
+        overflow-x: auto;
+        white-space: pre;
+        color: #2a2e37;
+      }
+
+      .tokens b {
+        color: #6b7280;
+        font-weight: 400;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Palette Candidates</h1>
+      <p class="intro">
+        Purpose: render <b>one identical component skeleton</b> in several colour schemes so they can be compared side by side.
+        The text in every preview is <b>generic placeholder copy</b>. It deliberately contains no real names, brands or prices —
+        so there is nothing to scrub when you reuse this file, and because the content is identical you end up comparing the colours themselves.
+      </p>
+      <p class="intro">
+        One candidate = a variable block + a <code>.case</code> section + a TOC entry + an entry in the contrast script. Four places.
+        <b>Copy the <a href="#template">template block</a>, change all four, and you have added one.</b>
+      </p>
+      <p class="intro">
+        Variables: <code>--page</code> page · <code>--panel</code> card surface · <code>--panel-hover</code> hover surface ·
+        <code>--line</code> / <code>--line-strong</code> rules ·
+        <code>--fg</code> body text · <code>--muted</code> secondary text · <code>--accent</code> accent ·
+        <code>--accent-soft</code> accent wash · <code>--grid</code> background grid.
+      </p>
+      <p class="intro">
+        <b>a / b / c</b> each define two modes (light + dark); <b>d / e / f</b> define only one mode each
+        (light or dark). Both shapes can coexist — if a project has no theme toggle, the second shape is less work.
+      </p>
+
+      <ul class="toc">
+        <li><a href="#template">Template</a></li>
+        <li><a href="#scale">Type scale</a></li>
+        <li><a href="#a">A · Technical Blue</a></li>
+        <li><a href="#b">B · Editorial Mono</a></li>
+        <li><a href="#c">C · Warm Professional</a></li>
+        <li><a href="#d">D · Studio White</a></li>
+        <li><a href="#e">E · Ember</a></li>
+        <li><a href="#f">F · Concrete</a></li>
+      </ul>
+
+      <!-- ============ Template ============ -->
+      <section class="case" id="template">
+        <h2><span class="letter">T</span> Template <small>copy this block to add a palette</small></h2>
+        <p class="note">
+          The four parts below are a <b>copy-and-paste</b> skeleton. Adding a candidate means changing <b>four</b> places, and missing one breaks something —
+          especially the fourth: the colours inside <code>contrast-check.mjs</code> are <b>transcribed by hand</b>,
+          and if they drift from the variable block, that all-green result is meaningless.
+        </p>
+        <pre class="tokens">&lt;!-- (1) Variable block: goes inside &lt;style&gt;. A single-mode candidate keeps only light or dark. --&gt;
+[data-palette='x'][data-mode='light'] {
+  --accent: #......;   --accent-soft: rgba(..., 0.10);
+  --page: #......;     --panel: #......;       --panel-hover: #......;
+  --line: #......;     --line-strong: #......;
+  --fg: #......;       --muted: #......;       --grid: rgba(..., 0.05);
+}
+
+&lt;!-- (2) Preview section: after the last &lt;/section&gt;, before &lt;/div&gt; --&gt;
+&lt;section class="case" id="x"&gt;
+  &lt;h2&gt;&lt;span class="letter"&gt;X&lt;/span&gt; Name &lt;small&gt;one-line character&lt;/small&gt;&lt;/h2&gt;
+  &lt;p class="note"&gt;Why this one — write the trade-off, not adjectives.&lt;/p&gt;
+  &lt;div class="row"&gt;
+    &lt;figure&gt;
+      &lt;div class="phone" data-palette="x" data-mode="light"&gt;
+        &lt;!-- copy a whole topbar + body from an existing preview; keep the content generic —
+             no real names, brands or prices. Nothing to scrub later,
+             and identical content means you compare colours. --&gt;
+      &lt;/div&gt;
+      &lt;figcaption&gt;light&lt;/figcaption&gt;
+    &lt;/figure&gt;
+  &lt;/div&gt;
+  &lt;pre class="tokens"&gt;&lt;b&gt;light&lt;/b&gt;
+...exactly the same variables as (1)...
+  &lt;/pre&gt;
+&lt;/section&gt;
+
+&lt;!-- (3) TOC: add one line inside &lt;ul class="toc"&gt; --&gt;
+&lt;li&gt;&lt;a href="#x"&gt;X · Name&lt;/a&gt;&lt;/li&gt;
+
+// (4) Acceptance script: add one entry to schemes in contrast-check.mjs.
+//     Values must match (1) character for character, or the contrast verdict is void.
+x: { name: 'X — Name', light: { fg: '#...', muted: '#...', page: '#...', panel: '#...', accent: '#...' } },</pre>
+        <p class="note">
+          <b>Always run</b> <code>node contrast-check.mjs</code> afterwards: body and secondary text must both clear 4.5:1, and the exit code must be 0.
+          The script walks whatever modes each candidate <b>actually defines</b>, so single-mode (d/e/f) and two-mode (a/b/c) candidates can sit side by side.
+        </p>
+      </section>
+
+      <!-- ============ A ============ -->
+      <section class="case" id="a">
+        <h2><span class="letter">A</span> Technical Blue <small>low-risk refinement</small></h2>
+        <p class="note">
+          Same structure, contrast fixed. Calm and conventional —
+          <b>the lowest-risk option, and the hardest to get wrong.</b> Nothing about the character changes,
+          only how legible it is on a bright screen.
+        </p>
+        <div class="row">
+          <figure>
+            <div class="phone" data-palette="a" data-mode="light">
+              <div class="topbar">
+                <span class="logo">LOGO</span>
+                <nav><span class="on">One</span><span>Two</span><span>Three</span></nav>
+                <span class="toggle"></span>
+              </div>
+              <div class="body">
+                <span class="badge"><i></i>Status label</span>
+                <h1>Headline goes here</h1>
+                <p class="role">Subheading · supporting detail</p>
+                <p class="muted lead">One or two lines of supporting copy sit here.</p>
+                <div class="btns">
+                  <span class="btn">Primary action</span>
+                  <span class="btn-ghost">Secondary →</span>
+                </div>
+                <div class="card">
+                  <h3>Section title</h3>
+                  <p class="muted">A short supporting line.</p>
+                  <div class="data-row"><span>Item one</span><span class="val">00</span></div>
+                  <div class="data-row"><span>Item two</span><span class="val">00</span></div>
+                  <div class="chips">
+                    <span>Tag</span><span>Tag</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <figcaption>light</figcaption>
+          </figure>
+
+          <figure>
+            <div class="phone" data-palette="a" data-mode="dark">
+              <div class="topbar">
+                <span class="logo">LOGO</span>
+                <nav><span class="on">One</span><span>Two</span><span>Three</span></nav>
+                <span class="toggle"></span>
+              </div>
+              <div class="body">
+                <span class="badge"><i></i>Status label</span>
+                <h1>Headline goes here</h1>
+                <p class="role">Subheading · supporting detail</p>
+                <p class="muted lead">One or two lines of supporting copy sit here.</p>
+                <div class="btns">
+                  <span class="btn">Primary action</span>
+                  <span class="btn-ghost">Secondary →</span>
+                </div>
+                <div class="card">
+                  <h3>Section title</h3>
+                  <p class="muted">A short supporting line.</p>
+                  <div class="data-row"><span>Item one</span><span class="val">00</span></div>
+                  <div class="data-row"><span>Item two</span><span class="val">00</span></div>
+                  <div class="chips">
+                    <span>Tag</span><span>Tag</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <figcaption>dark (default)</figcaption>
+          </figure>
+        </div>
+
+        <pre class="tokens"><b>light</b>
+--accent: #0369a1;      --accent-soft: rgba(3, 105, 161, 0.12);
+--page: #f8fafc;        --panel: #ffffff;       --panel-hover: #f1f5f9;
+--line: #e2e8f0;        --line-strong: #cbd5e1;
+--fg: #0b0d12;          --muted: #556070;       --grid: rgba(15, 23, 42, 0.06);
+
+<b>dark</b>
+--accent: #38bdf8;      --accent-soft: rgba(56, 189, 248, 0.14);
+--page: #08090b;        --panel: #0f1115;       --panel-hover: #14171d;
+--line: #22262e;        --line-strong: #333944;
+--fg: #e7eaf0;          --muted: #8b95a5;       --grid: rgba(255, 255, 255, 0.035);</pre>
+      </section>
+
+      <!-- ============ B ============ -->
+      <section class="case" id="b">
+        <h2><span class="letter">B</span> Editorial Mono <small>black-and-white editorial</small></h2>
+        <p class="note">
+          Colour steps aside so imagery and content lead. <b>Watch the buttons</b> — they carry impact through
+          size and weight rather than hue, inverting between light and dark.
+          <b>Risk:</b> accent-coloured links lose their colour cue and have to lean on weight alone.
+        </p>
+        <div class="row">
+          <figure>
+            <div class="phone" data-palette="b" data-mode="light">
+              <div class="topbar">
+                <span class="logo">LOGO</span>
+                <nav><span class="on">One</span><span>Two</span><span>Three</span></nav>
+                <span class="toggle"></span>
+              </div>
+              <div class="body">
+                <span class="badge"><i></i>Status label</span>
+                <h1>Headline goes here</h1>
+                <p class="role">Subheading · supporting detail</p>
+                <p class="muted lead">One or two lines of supporting copy sit here.</p>
+                <div class="btns">
+                  <span class="btn">Primary action</span>
+                  <span class="btn-ghost">Secondary →</span>
+                </div>
+                <div class="card">
+                  <h3>Section title</h3>
+                  <p class="muted">A short supporting line.</p>
+                  <div class="data-row"><span>Item one</span><span class="val">00</span></div>
+                  <div class="data-row"><span>Item two</span><span class="val">00</span></div>
+                  <div class="chips">
+                    <span>Tag</span><span>Tag</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <figcaption>light</figcaption>
+          </figure>
+
+          <figure>
+            <div class="phone" data-palette="b" data-mode="dark">
+              <div class="topbar">
+                <span class="logo">LOGO</span>
+                <nav><span class="on">One</span><span>Two</span><span>Three</span></nav>
+                <span class="toggle"></span>
+              </div>
+              <div class="body">
+                <span class="badge"><i></i>Status label</span>
+                <h1>Headline goes here</h1>
+                <p class="role">Subheading · supporting detail</p>
+                <p class="muted lead">One or two lines of supporting copy sit here.</p>
+                <div class="btns">
+                  <span class="btn">Primary action</span>
+                  <span class="btn-ghost">Secondary →</span>
+                </div>
+                <div class="card">
+                  <h3>Section title</h3>
+                  <p class="muted">A short supporting line.</p>
+                  <div class="data-row"><span>Item one</span><span class="val">00</span></div>
+                  <div class="data-row"><span>Item two</span><span class="val">00</span></div>
+                  <div class="chips">
+                    <span>Tag</span><span>Tag</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <figcaption>dark</figcaption>
+          </figure>
+        </div>
+
+        <pre class="tokens"><b>light</b>
+--accent: #111827;      --accent-soft: rgba(17, 24, 39, 0.07);
+--page: #fbfbfa;        --panel: #ffffff;       --panel-hover: #f4f4f2;
+--line: #e7e5e4;        --line-strong: #d6d3d1;
+--fg: #0a0a0a;          --muted: #57534e;       --grid: rgba(10, 10, 10, 0.05);
+
+<b>dark</b>
+--accent: #fafaf9;      --accent-soft: rgba(250, 250, 249, 0.10);
+--page: #0a0a0a;        --panel: #141414;       --panel-hover: #1c1c1c;
+--line: #262626;        --line-strong: #404040;
+--fg: #fafaf9;          --muted: #a3a3a3;       --grid: rgba(255, 255, 255, 0.04);</pre>
+      </section>
+
+      <!-- ============ C ============ -->
+      <section class="case" id="c">
+        <h2><span class="letter">C</span> Warm Professional <small>warm and neutral</small></h2>
+        <p class="note">
+          Warm and neutral. Friendlier than A or B; <b>the risk is that it reads as less precise</b> —
+          where you need to look cool and measured, warm colour works against you.
+        </p>
+        <div class="row">
+          <figure>
+            <div class="phone" data-palette="c" data-mode="light">
+              <div class="topbar">
+                <span class="logo">LOGO</span>
+                <nav><span class="on">One</span><span>Two</span><span>Three</span></nav>
+                <span class="toggle"></span>
+              </div>
+              <div class="body">
+                <span class="badge"><i></i>Status label</span>
+                <h1>Headline goes here</h1>
+                <p class="role">Subheading · supporting detail</p>
+                <p class="muted lead">One or two lines of supporting copy sit here.</p>
+                <div class="btns">
+                  <span class="btn">Primary action</span>
+                  <span class="btn-ghost">Secondary →</span>
+                </div>
+                <div class="card">
+                  <h3>Section title</h3>
+                  <p class="muted">A short supporting line.</p>
+                  <div class="data-row"><span>Item one</span><span class="val">00</span></div>
+                  <div class="data-row"><span>Item two</span><span class="val">00</span></div>
+                  <div class="chips">
+                    <span>Tag</span><span>Tag</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <figcaption>light</figcaption>
+          </figure>
+
+          <figure>
+            <div class="phone" data-palette="c" data-mode="dark">
+              <div class="topbar">
+                <span class="logo">LOGO</span>
+                <nav><span class="on">One</span><span>Two</span><span>Three</span></nav>
+                <span class="toggle"></span>
+              </div>
+              <div class="body">
+                <span class="badge"><i></i>Status label</span>
+                <h1>Headline goes here</h1>
+                <p class="role">Subheading · supporting detail</p>
+                <p class="muted lead">One or two lines of supporting copy sit here.</p>
+                <div class="btns">
+                  <span class="btn">Primary action</span>
+                  <span class="btn-ghost">Secondary →</span>
+                </div>
+                <div class="card">
+                  <h3>Section title</h3>
+                  <p class="muted">A short supporting line.</p>
+                  <div class="data-row"><span>Item one</span><span class="val">00</span></div>
+                  <div class="data-row"><span>Item two</span><span class="val">00</span></div>
+                  <div class="chips">
+                    <span>Tag</span><span>Tag</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <figcaption>dark</figcaption>
+          </figure>
+        </div>
+
+        <pre class="tokens"><b>light</b>
+--accent: #b45309;      --accent-soft: rgba(180, 83, 9, 0.11);
+--page: #faf9f7;        --panel: #ffffff;       --panel-hover: #f5f2ee;
+--line: #e8e4de;        --line-strong: #d5cfc6;
+--fg: #1c1917;          --muted: #6b6259;       --grid: rgba(28, 25, 23, 0.05);
+
+<b>dark</b>
+--accent: #fbbf24;      --accent-soft: rgba(251, 191, 36, 0.13);
+--page: #0c0a09;        --panel: #17140f;       --panel-hover: #1f1b15;
+--line: #2a2622;        --line-strong: #3d3730;
+--fg: #f5f2ee;          --muted: #a8a096;       --grid: rgba(255, 255, 255, 0.035);</pre>
+      </section>
+
+      <!-- ============ Type scale ============ -->
+      <section class="case" id="scale">
+        <h2><span class="letter">Aa</span> Type scale <small>independent of colour · shared by every candidate</small></h2>
+        <p class="note">
+          The other half of a design system. The type scale is <b>independent of colour</b>, so you set it once and every candidate reuses it.
+          <b>16px is the body baseline: up to 20 / 28 / 40, down to 14 / 12</b> — six steps
+          (steps of roughly 1.25–1.43, not a strict geometric series). On mobile the hero headline drops from 40px to 32px
+          so a long headline does not wrap too many times.
+        </p>
+        <div>
+          <div class="scale-row">
+            <span class="px">40px · 1.05</span>
+            <span style="font-size: 40px; letter-spacing: -0.02em">Headline here</span>
+            <span class="use">Hero headline h1 (32px on mobile)</span>
+          </div>
+          <div class="scale-row">
+            <span class="px">28px · 1.15</span>
+            <span style="font-size: 28px; letter-spacing: -0.01em">Section title</span>
+            <span class="use">Section title h2</span>
+          </div>
+          <div class="scale-row">
+            <span class="px">20px · 1.3</span>
+            <span style="font-size: 20px">Item heading</span>
+            <span class="use">Sub-heading h3</span>
+          </div>
+          <div class="scale-row">
+            <span class="px">16px · 1.6</span>
+            <span style="font-size: 16px">Body copy sits at this size.</span>
+            <span class="use">Body baseline</span>
+          </div>
+          <div class="scale-row">
+            <span class="px">14px · 1.6</span>
+            <span style="font-size: 14px">Secondary line of text.</span>
+            <span class="use">Secondary text</span>
+          </div>
+          <div class="scale-row">
+            <span class="px">12px · 1.5</span>
+            <span style="font-size: 12px">LABEL · 000 / 000</span>
+            <span class="use">Labels and values (monospace figures)</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           D / E / F — single-mode candidates (example)
+           Unlike a/b/c, each defines **one complete mode** (light or dark) rather than both.
+           Both shapes can coexist; if a project needs no theme toggle, single-mode is less work.
+           ============================================================ -->
+
+      <!-- ============ D ============ -->
+      <section class="case" id="d">
+        <h2><span class="letter">D</span> Studio White <small>clean clinical · light</small></h2>
+        <p class="note">
+          Light base + deep teal. Clean, credible, unhurried — like a good physiotherapy studio.
+          <b>Deliberately avoids the red-and-black some industries default to.</b> A light base is easiest on the eye indoors.
+        </p>
+        <div class="row">
+          <figure>
+            <div class="phone" data-palette="d" data-mode="light">
+              <div class="topbar">
+                <span class="logo">LOGO</span>
+                <nav><span class="on">One</span><span>Two</span><span>Three</span></nav>
+                <span class="toggle"></span>
+              </div>
+              <div class="body">
+                <span class="badge"><i></i>Status label</span>
+                <h1>Headline goes here</h1>
+                <p class="role">Subheading · supporting detail</p>
+                <p class="muted lead">One or two lines of supporting copy sit here.</p>
+                <div class="btns">
+                  <span class="btn">Primary action</span>
+                  <span class="btn-ghost">Secondary →</span>
+                </div>
+                <div class="card">
+                  <h3>Section title</h3>
+                  <p class="muted">A short supporting line.</p>
+                  <div class="data-row"><span>Item one</span><span class="val">00</span></div>
+                  <div class="data-row"><span>Item two</span><span class="val">00</span></div>
+                  <div class="chips">
+                    <span>Tag</span><span>Tag</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <figcaption>light (only mode)</figcaption>
+          </figure>
+        </div>
+
+        <pre class="tokens"><b>light</b>
+--accent: #0f766e;      --accent-soft: rgba(15, 118, 110, 0.10);
+--page: #f7faf9;        --panel: #ffffff;       --panel-hover: #f0f5f4;
+--line: #e0e8e6;        --line-strong: #c8d5d2;
+--fg: #0c1311;          --muted: #4f5f5c;       --grid: rgba(12, 19, 17, 0.05);</pre>
+      </section>
+
+      <!-- ============ E ============ -->
+      <section class="case" id="e">
+        <h2><span class="letter">E</span> Ember <small>after-hours · dark</small></h2>
+        <p class="note">
+          Near-black base + warm amber. Dark is everywhere, and <b>done well it looks expensive, done badly it looks like a template</b> —
+          the difference is restraint: one bright accent, everything else pushed down. It looks especially good on OLED phones.
+          The cost is legibility outdoors in bright sun.
+        </p>
+        <div class="row">
+          <figure>
+            <div class="phone" data-palette="e" data-mode="dark">
+              <div class="topbar">
+                <span class="logo">LOGO</span>
+                <nav><span class="on">One</span><span>Two</span><span>Three</span></nav>
+                <span class="toggle"></span>
+              </div>
+              <div class="body">
+                <span class="badge"><i></i>Status label</span>
+                <h1>Headline goes here</h1>
+                <p class="role">Subheading · supporting detail</p>
+                <p class="muted lead">One or two lines of supporting copy sit here.</p>
+                <div class="btns">
+                  <span class="btn">Primary action</span>
+                  <span class="btn-ghost">Secondary →</span>
+                </div>
+                <div class="card">
+                  <h3>Section title</h3>
+                  <p class="muted">A short supporting line.</p>
+                  <div class="data-row"><span>Item one</span><span class="val">00</span></div>
+                  <div class="data-row"><span>Item two</span><span class="val">00</span></div>
+                  <div class="chips">
+                    <span>Tag</span><span>Tag</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <figcaption>dark (only mode)</figcaption>
+          </figure>
+        </div>
+
+        <pre class="tokens"><b>dark</b>
+--accent: #fbbf24;      --accent-soft: rgba(251, 191, 36, 0.13);
+--page: #0a0908;        --panel: #14110e;       --panel-hover: #1c1814;
+--line: #272219;        --line-strong: #3a3327;
+--fg: #f5f1ea;          --muted: #a89f92;       --grid: rgba(255, 255, 255, 0.035);</pre>
+      </section>
+
+      <!-- ============ F ============ -->
+      <section class="case" id="f">
+        <h2><span class="letter">F</span> Concrete <small>local editorial · light</small></h2>
+        <p class="note">
+          Warm grey base + brick red. <b>The most "local / street" of the three</b>, and the least like an industry template.
+          Brick red is more restrained than pure red — it does not shout. A good backdrop once photos arrive.
+        </p>
+        <div class="row">
+          <figure>
+            <div class="phone" data-palette="f" data-mode="light">
+              <div class="topbar">
+                <span class="logo">LOGO</span>
+                <nav><span class="on">One</span><span>Two</span><span>Three</span></nav>
+                <span class="toggle"></span>
+              </div>
+              <div class="body">
+                <span class="badge"><i></i>Status label</span>
+                <h1>Headline goes here</h1>
+                <p class="role">Subheading · supporting detail</p>
+                <p class="muted lead">One or two lines of supporting copy sit here.</p>
+                <div class="btns">
+                  <span class="btn">Primary action</span>
+                  <span class="btn-ghost">Secondary →</span>
+                </div>
+                <div class="card">
+                  <h3>Section title</h3>
+                  <p class="muted">A short supporting line.</p>
+                  <div class="data-row"><span>Item one</span><span class="val">00</span></div>
+                  <div class="data-row"><span>Item two</span><span class="val">00</span></div>
+                  <div class="chips">
+                    <span>Tag</span><span>Tag</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <figcaption>light (only mode)</figcaption>
+          </figure>
+        </div>
+
+        <pre class="tokens"><b>light</b>
+--accent: #9a3412;      --accent-soft: rgba(154, 52, 18, 0.10);
+--page: #f4f3f1;        --panel: #ffffff;       --panel-hover: #eeede9;
+--line: #e2e0db;        --line-strong: #cdcac3;
+--fg: #1a1917;          --muted: #5c5850;       --grid: rgba(26, 25, 23, 0.05);</pre>
+      </section>
+    </div>
+  </body>
+</html>
