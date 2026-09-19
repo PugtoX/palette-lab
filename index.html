@@ -102,6 +102,23 @@
         font-size: 13px;
       }
 
+      /* Shortlist badge. Put data-pick on a .case to emphasise it, and add
+         <span class="pick">Shortlisted</span> to its heading. Move the marker
+         when the shortlist changes; leave no more than three marked. */
+      .pick {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 999px;
+        background: var(--shell-fg);
+        color: var(--shell-panel);
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .case[data-pick] {
+        border-color: var(--shell-fg);
+      }
+
       .note {
         color: var(--shell-muted);
         font-size: 14px;
@@ -249,7 +266,7 @@
         background: var(--accent);
       }
 
-      .phone h1 {
+      .phone .mock-h1 {
         font-size: 26px;
         line-height: 1.05;
         letter-spacing: -0.02em;
@@ -517,9 +534,8 @@
         --grid: rgba(26, 25, 23, 0.05);
       }
 
-      /* ---------- Measured contrast (stage-2 acceptance evidence) ----------
-         WCAG 2.1 relative-luminance formula, computed by contrast-check.mjs. Reproduce with:
-             node contrast-check.mjs
+      /* ---------- Measured contrast ----------
+         Computed with the WCAG 2.1 relative-luminance formula.
          Threshold: body text and secondary text must both be >= 4.5:1.
          a/b/c measured 2026-09-18; d/e/f measured 2026-09-19.
 
@@ -570,8 +586,8 @@
         so there is nothing to scrub when you reuse this file, and because the content is identical you end up comparing the colours themselves.
       </p>
       <p class="intro">
-        One candidate = a variable block + a <code>.case</code> section + a TOC entry + an entry in the contrast script. Four places.
-        <b>Copy the <a href="#template">template block</a>, change all four, and you have added one.</b>
+        <b>Choose between the candidates marked <span class="pick">Shortlisted</span>.</b>
+        The others are kept for comparison only.
       </p>
       <p class="intro">
         Variables: <code>--page</code> page · <code>--panel</code> card surface · <code>--panel-hover</code> hover surface ·
@@ -585,7 +601,6 @@
       </p>
 
       <ul class="toc">
-        <li><a href="#template">Template</a></li>
         <li><a href="#scale">Type scale</a></li>
         <li><a href="#a">A · Technical Blue</a></li>
         <li><a href="#b">B · Editorial Mono</a></li>
@@ -594,53 +609,6 @@
         <li><a href="#e">E · Ember</a></li>
         <li><a href="#f">F · Concrete</a></li>
       </ul>
-
-      <!-- ============ Template ============ -->
-      <section class="case" id="template">
-        <h2><span class="letter">T</span> Template <small>copy this block to add a palette</small></h2>
-        <p class="note">
-          The four parts below are a <b>copy-and-paste</b> skeleton. Adding a candidate means changing <b>four</b> places, and missing one breaks something —
-          especially the fourth: the colours inside <code>contrast-check.mjs</code> are <b>transcribed by hand</b>,
-          and if they drift from the variable block, that all-green result is meaningless.
-        </p>
-        <pre class="tokens">&lt;!-- (1) Variable block: goes inside &lt;style&gt;. A single-mode candidate keeps only light or dark. --&gt;
-[data-palette='x'][data-mode='light'] {
-  --accent: #......;   --accent-soft: rgba(..., 0.10);
-  --page: #......;     --panel: #......;       --panel-hover: #......;
-  --line: #......;     --line-strong: #......;
-  --fg: #......;       --muted: #......;       --grid: rgba(..., 0.05);
-}
-
-&lt;!-- (2) Preview section: after the last &lt;/section&gt;, before &lt;/div&gt; --&gt;
-&lt;section class="case" id="x"&gt;
-  &lt;h2&gt;&lt;span class="letter"&gt;X&lt;/span&gt; Name &lt;small&gt;one-line character&lt;/small&gt;&lt;/h2&gt;
-  &lt;p class="note"&gt;Why this one — write the trade-off, not adjectives.&lt;/p&gt;
-  &lt;div class="row"&gt;
-    &lt;figure&gt;
-      &lt;div class="phone" data-palette="x" data-mode="light"&gt;
-        &lt;!-- copy a whole topbar + body from an existing preview; keep the content generic —
-             no real names, brands or prices. Nothing to scrub later,
-             and identical content means you compare colours. --&gt;
-      &lt;/div&gt;
-      &lt;figcaption&gt;light&lt;/figcaption&gt;
-    &lt;/figure&gt;
-  &lt;/div&gt;
-  &lt;pre class="tokens"&gt;&lt;b&gt;light&lt;/b&gt;
-...exactly the same variables as (1)...
-  &lt;/pre&gt;
-&lt;/section&gt;
-
-&lt;!-- (3) TOC: add one line inside &lt;ul class="toc"&gt; --&gt;
-&lt;li&gt;&lt;a href="#x"&gt;X · Name&lt;/a&gt;&lt;/li&gt;
-
-// (4) Acceptance script: add one entry to schemes in contrast-check.mjs.
-//     Values must match (1) character for character, or the contrast verdict is void.
-x: { name: 'X — Name', light: { fg: '#...', muted: '#...', page: '#...', panel: '#...', accent: '#...' } },</pre>
-        <p class="note">
-          <b>Always run</b> <code>node contrast-check.mjs</code> afterwards: body and secondary text must both clear 4.5:1, and the exit code must be 0.
-          The script walks whatever modes each candidate <b>actually defines</b>, so single-mode (d/e/f) and two-mode (a/b/c) candidates can sit side by side.
-        </p>
-      </section>
 
       <!-- ============ A ============ -->
       <section class="case" id="a">
@@ -660,7 +628,7 @@ x: { name: 'X — Name', light: { fg: '#...', muted: '#...', page: '#...', panel
               </div>
               <div class="body">
                 <span class="badge"><i></i>Status label</span>
-                <h1>Headline goes here</h1>
+                <div class="mock-h1">Headline goes here</div>
                 <p class="role">Subheading · supporting detail</p>
                 <p class="muted lead">One or two lines of supporting copy sit here.</p>
                 <div class="btns">
@@ -690,7 +658,7 @@ x: { name: 'X — Name', light: { fg: '#...', muted: '#...', page: '#...', panel
               </div>
               <div class="body">
                 <span class="badge"><i></i>Status label</span>
-                <h1>Headline goes here</h1>
+                <div class="mock-h1">Headline goes here</div>
                 <p class="role">Subheading · supporting detail</p>
                 <p class="muted lead">One or two lines of supporting copy sit here.</p>
                 <div class="btns">
@@ -743,7 +711,7 @@ x: { name: 'X — Name', light: { fg: '#...', muted: '#...', page: '#...', panel
               </div>
               <div class="body">
                 <span class="badge"><i></i>Status label</span>
-                <h1>Headline goes here</h1>
+                <div class="mock-h1">Headline goes here</div>
                 <p class="role">Subheading · supporting detail</p>
                 <p class="muted lead">One or two lines of supporting copy sit here.</p>
                 <div class="btns">
@@ -773,7 +741,7 @@ x: { name: 'X — Name', light: { fg: '#...', muted: '#...', page: '#...', panel
               </div>
               <div class="body">
                 <span class="badge"><i></i>Status label</span>
-                <h1>Headline goes here</h1>
+                <div class="mock-h1">Headline goes here</div>
                 <p class="role">Subheading · supporting detail</p>
                 <p class="muted lead">One or two lines of supporting copy sit here.</p>
                 <div class="btns">
@@ -825,7 +793,7 @@ x: { name: 'X — Name', light: { fg: '#...', muted: '#...', page: '#...', panel
               </div>
               <div class="body">
                 <span class="badge"><i></i>Status label</span>
-                <h1>Headline goes here</h1>
+                <div class="mock-h1">Headline goes here</div>
                 <p class="role">Subheading · supporting detail</p>
                 <p class="muted lead">One or two lines of supporting copy sit here.</p>
                 <div class="btns">
@@ -855,7 +823,7 @@ x: { name: 'X — Name', light: { fg: '#...', muted: '#...', page: '#...', panel
               </div>
               <div class="body">
                 <span class="badge"><i></i>Status label</span>
-                <h1>Headline goes here</h1>
+                <div class="mock-h1">Headline goes here</div>
                 <p class="role">Subheading · supporting detail</p>
                 <p class="muted lead">One or two lines of supporting copy sit here.</p>
                 <div class="btns">
@@ -940,8 +908,8 @@ x: { name: 'X — Name', light: { fg: '#...', muted: '#...', page: '#...', panel
            ============================================================ -->
 
       <!-- ============ D ============ -->
-      <section class="case" id="d">
-        <h2><span class="letter">D</span> Studio White <small>clean clinical · light</small></h2>
+      <section class="case" id="d" data-pick>
+        <h2><span class="letter">D</span> Studio White <small>clean clinical · light</small> <span class="pick">Shortlisted</span></h2>
         <p class="note">
           Light base + deep teal. Clean, credible, unhurried — like a good physiotherapy studio.
           <b>Deliberately avoids the red-and-black some industries default to.</b> A light base is easiest on the eye indoors.
@@ -956,7 +924,7 @@ x: { name: 'X — Name', light: { fg: '#...', muted: '#...', page: '#...', panel
               </div>
               <div class="body">
                 <span class="badge"><i></i>Status label</span>
-                <h1>Headline goes here</h1>
+                <div class="mock-h1">Headline goes here</div>
                 <p class="role">Subheading · supporting detail</p>
                 <p class="muted lead">One or two lines of supporting copy sit here.</p>
                 <div class="btns">
@@ -986,8 +954,8 @@ x: { name: 'X — Name', light: { fg: '#...', muted: '#...', page: '#...', panel
       </section>
 
       <!-- ============ E ============ -->
-      <section class="case" id="e">
-        <h2><span class="letter">E</span> Ember <small>after-hours · dark</small></h2>
+      <section class="case" id="e" data-pick>
+        <h2><span class="letter">E</span> Ember <small>after-hours · dark</small> <span class="pick">Shortlisted</span></h2>
         <p class="note">
           Near-black base + warm amber. Dark is everywhere, and <b>done well it looks expensive, done badly it looks like a template</b> —
           the difference is restraint: one bright accent, everything else pushed down. It looks especially good on OLED phones.
@@ -1003,7 +971,7 @@ x: { name: 'X — Name', light: { fg: '#...', muted: '#...', page: '#...', panel
               </div>
               <div class="body">
                 <span class="badge"><i></i>Status label</span>
-                <h1>Headline goes here</h1>
+                <div class="mock-h1">Headline goes here</div>
                 <p class="role">Subheading · supporting detail</p>
                 <p class="muted lead">One or two lines of supporting copy sit here.</p>
                 <div class="btns">
@@ -1033,8 +1001,8 @@ x: { name: 'X — Name', light: { fg: '#...', muted: '#...', page: '#...', panel
       </section>
 
       <!-- ============ F ============ -->
-      <section class="case" id="f">
-        <h2><span class="letter">F</span> Concrete <small>local editorial · light</small></h2>
+      <section class="case" id="f" data-pick>
+        <h2><span class="letter">F</span> Concrete <small>local editorial · light</small> <span class="pick">Shortlisted</span></h2>
         <p class="note">
           Warm grey base + brick red. <b>The most "local / street" of the three</b>, and the least like an industry template.
           Brick red is more restrained than pure red — it does not shout. A good backdrop once photos arrive.
@@ -1049,7 +1017,7 @@ x: { name: 'X — Name', light: { fg: '#...', muted: '#...', page: '#...', panel
               </div>
               <div class="body">
                 <span class="badge"><i></i>Status label</span>
-                <h1>Headline goes here</h1>
+                <div class="mock-h1">Headline goes here</div>
                 <p class="role">Subheading · supporting detail</p>
                 <p class="muted lead">One or two lines of supporting copy sit here.</p>
                 <div class="btns">
